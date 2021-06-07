@@ -5,30 +5,28 @@ from datetime import datetime, timezone
 
 TOKEN = open("secret.key").read()
 
-client = commands.Bot(command_prefix=["."])
+help_command = commands.DefaultHelpCommand(no_category = "Commands")
+client = commands.Bot(command_prefix=commands.when_mentioned_or("."), case_insensitive=True, help_command=help_command) #prefix för att botten förstår
 
-mememes = client.get_channel(685606448327294990)
-isaksightseeing = client.get_channel(811957878448455742)
-meet = client.get_channel(702054967808360449)
-kod = client.get_channel(758333123338436618)
-photoshop = client.get_channel(807232533032599653)
-thottierlistt = client.get_channel(830053241915703306)
-thotspam = client.get_channel(830765962273488897)
+@client.command(name="Load", aliases=["reload"]) #ladar om cogsen och ger fellmedlanden
+async def load(ctx, extension): 
+    try:
+        client.load_extension(f"cogs.{extension}")
+    except:
+        try:
+            client.unload_extension(f"cogs.{extension}")
+            client.load_extension(f"cogs.{extension}")
+        except:
+            await ctx.message.add_reaction("👎")
+        else:
+            await ctx.message.add_reaction("🔄")
+    else:
+        await ctx.message.add_reaction("👍")
 
-@client.event
-async def on_ready():
-    print(f'{client.user} has connected to Discord!')
-    mememes = client.get_channel(685606448327294990)
-    await mememes.send("Dc buttler online. Here to serve!")
 
-@client.command()
-async def hej(ctx):
-    await ctx.send("Tjo katt")
-
-@client.command()
-async def ping(ctx):
-    dt = datetime.now(tz=timezone.utc)
-    naive = dt.replace(tzinfo=None)
-    await ctx.send(f":ping_pong: Bot Latency is {round((naive - ctx.message.created_at).total_seconds() * 1000)}ms. API Latency is {round(client.latency * 1000)}ms")
+# Laddar alla cogs när botten statars
+for fileName in os.listdir("./cogs"):
+    if fileName.endswith(".py"):
+            client.load_extension(f"cogs.{fileName[:-3]}")
 
 client.run(TOKEN)
